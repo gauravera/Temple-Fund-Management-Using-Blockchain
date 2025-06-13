@@ -264,7 +264,6 @@ export default function TempleInfo() {
   };
 
   const uploadGalleryImages = async () => {
-    console.log("Temple ID:", templeData._id);
     if (!templeData._id) {
       toast.error("Temple ID is not available.");
       return;
@@ -289,7 +288,7 @@ export default function TempleInfo() {
       const response = await fetch(
         `http://localhost:5050/api/v1/templeDetails/add-gallery-images/${templeData._id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -304,7 +303,10 @@ export default function TempleInfo() {
         // Update the state with the new gallery images
         setTempleData((prev) => ({
           ...prev,
-          photoGallery: [...prev.photoGallery, ...result.data.addedImages],
+          photoGallery: [
+            ...prev.photoGallery.filter((img) => typeof img === "string"),
+            ...result.data.addedImages,
+          ],
         }));
       } else {
         console.error("Failed to upload gallery images:", result.message);
@@ -901,26 +903,28 @@ export default function TempleInfo() {
             </div>
           ))}
         </div>
-        {/* Conditionally Render Upload Gallery Images Button */}
-        {templeData._id && (
-          <>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => document.getElementById("galleryImageInput").click()}
-              className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-medium shadow-lg flex items-center space-x-2"
-            >
-              <Upload className="w-5 h-5" />
-              <span>Select Images</span>
-            </motion.button>
-            <input
-              type="file"
-              id="galleryImageInput"
-              style={{ display: "none" }}
-              accept="image/*"
-              multiple
-              onChange={(e) => handleFileUpload(e, "gallery")}
-            />
+
+        <div className="flex justify-left gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => document.getElementById("galleryImageInput").click()}
+            className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-medium shadow-lg flex items-center space-x-2"
+          >
+            <Upload className="w-5 h-5" />
+            <span>Select Images</span>
+          </motion.button>
+          <input
+            type="file"
+            id="galleryImageInput"
+            style={{ display: "none" }}
+            accept="image/*"
+            multiple
+            onChange={(e) => handleFileUpload(e, "gallery")}
+          />
+
+          {/* Conditionally Render Upload Gallery Images Button */}
+          {templeData._id && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -960,8 +964,8 @@ export default function TempleInfo() {
                 </>
               )}
             </motion.button>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </motion.div>
   );

@@ -12,13 +12,15 @@ const donateToTemple = asyncHandler(async (req, res) => {
         transactionFee,
         purpose,
         status,
+        templeWalletAddress
     } = req.body;
-
-    console.log(req.body);
-
 
     if (!amount || !txHash || !gasPrice || !transactionFee || !purpose || !status) {
         throw new ApiError(400, "All fields are required");
+    }
+
+    if (!templeWalletAddress) {
+        throw new ApiError(400, "Temple wallet address is required.");
     }
 
     // Validate amount
@@ -55,6 +57,7 @@ const donateToTemple = asyncHandler(async (req, res) => {
     }
 
     const templeAdmin = await User.findOne({
+        walletAddress: templeWalletAddress.toLowerCase(),
         role: "templeAdmin",
         status: "active",
     });
@@ -87,6 +90,40 @@ const donateToTemple = asyncHandler(async (req, res) => {
         );
 });
 
+const donationHistory = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user._id;
+        if (!userId) {
+            throw new ApiError(400, "userId is not found");
+        }
+
+        const donations = await Transaction.find({
+            sender: userId,
+            transactionType: "transfer"
+        })
+            .populate({
+                path: "receiver",
+                select: "templeName templeLocation",
+            })
+            .populate({
+                path: "sender",
+                select: "walletAddress",
+            })
+            .sort({ createdAt: -1 }); // optional: latest first
+
+        return res
+            .status(201)
+            .json(new ApiResponse(
+                201,
+                donations,
+                "data fetched successfully !"
+            ));
+    } catch (error) {
+        console.error("Error fetching donations:", error);
+    }
+})
+
 export {
-    donateToTemple
+    donateToTemple,
+    donationHistory
 }

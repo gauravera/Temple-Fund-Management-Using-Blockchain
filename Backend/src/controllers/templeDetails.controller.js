@@ -276,6 +276,17 @@ const getTempleByAdmin = asyncHandler(async (req, res) => {
     );
 });
 
+const getPublicTempleCards = asyncHandler(async (req, res) => {
+    const temples = await Temple.find({ isVerified: true })
+        .select("templeName location.city location.state description coverImage slug")
+        .lean();
+
+    return res.status(200).json(
+        new ApiResponse(200, temples, "Public temple cards fetched successfully")
+    );
+});
+
+
 const getAllTemples = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -332,6 +343,21 @@ const getAllTemples = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to fetch temples");
     }
 });
+
+const getTempleBySlug = asyncHandler(async (req, res) => {
+    const { slug } = req.params;
+
+    const temple = await Temple.findOne({ slug });
+
+    if (!temple) {
+        throw new ApiError(404, "Temple not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, temple, "Temple fetched successfully")
+    );
+});
+
 
 const updateTempleCoverImage = asyncHandler(async (req, res) => {
     const { templeId } = req.params;
@@ -666,7 +692,9 @@ export {
     createTemple,
     updateTempleDetails,
     getTempleByAdmin,
+    getPublicTempleCards,
     getAllTemples,
+    getTempleBySlug,
     updateTempleCoverImage,
     addGalleryImages,
     deleteGalleryImage,

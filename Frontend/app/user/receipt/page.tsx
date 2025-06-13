@@ -43,7 +43,7 @@ export default function GlobalDonationSuccessPage() {
 
       return () => clearTimeout(timer)
     } else if (redirectToDashboard && countdown === 0) {
-      router.push("/dashboard")
+      router.push("/user/dashboard")
     }
   }, [redirectToDashboard, countdown, router])
 
@@ -63,6 +63,9 @@ export default function GlobalDonationSuccessPage() {
     setShowCopied(true)
     setTimeout(() => setShowCopied(false), 2000)
   }
+
+  const formattedPurpose =
+  purpose === "custom" ? decodeURIComponent(purpose) : purpose.charAt(0).toUpperCase() + purpose.slice(1)
 
   const downloadReceipt = () => {
     const doc = new jsPDF()
@@ -158,9 +161,6 @@ export default function GlobalDonationSuccessPage() {
     // Save the PDF
     doc.save(`donation-receipt-${transactionId}.pdf`)
   }
-
-  const formattedPurpose =
-    purpose === "custom" ? decodeURIComponent(purpose) : purpose.charAt(0).toUpperCase() + purpose.slice(1)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

@@ -3,7 +3,9 @@ import {
     createTemple,
     updateTempleDetails,
     getTempleByAdmin,
+    getPublicTempleCards,
     getAllTemples,
+    getTempleBySlug,
     updateTempleCoverImage,
     addGalleryImages,
     deleteGalleryImage,
@@ -36,8 +38,15 @@ router.route('/update-temple/:templeId').post(verifyJWT, authorizeRoles('templeA
 // Route to get temple by slug or ID
 router.route('/get-temple-by-admin').get(verifyJWT, authorizeRoles('templeAdmin'), getTempleByAdmin);
 
+// Route to get public temple cards
+router.route('/public-temple-cards').get(getPublicTempleCards);
+
+
 // Route to get all temples
 router.route('/get-all-temples').get(getAllTemples);
+
+router.route("/get-temple-by-slug/:slug").get(getTempleBySlug);
+
 
 // Route to update temple cover image
 router

@@ -18,11 +18,20 @@ import {
   Eye,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { templeService } from "./services/templeService";
+
+interface ApiError {
+  message: string;
+  statusCode?: number;
+}
 
 export default function Home(){
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [temples, setTemples] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -96,7 +105,7 @@ export default function Home(){
                 How It Works
               </a>
               <a
-                href="#temples"
+                href="/temples"
                 className="text-gray-700 hover:text-orange-600 transition-colors"
               >
                 Temples
@@ -198,7 +207,9 @@ export default function Home(){
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="transform hover:scale-105 transition-all">
-              <div className="text-4xl font-bold text-orange-600">500+</div>
+              <div className="text-4xl font-bold text-orange-600">
+                {loading ? "..." : temples.length}+
+              </div>
               <div className="text-gray-600 mt-2">Temples Connected</div>
             </div>
             <div className="transform hover:scale-105 transition-all">
