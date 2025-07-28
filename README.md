@@ -33,7 +33,7 @@ By recording each transaction on the blockchain, donations become traceable and 
   1.Clone the repository
   
   ```bash
-    git clone https://github.com/Rajnandan23/Temple-Fund-Management-using-Blockchain.git
+    git clone https://github.com/gauravera/Temple-Fund-Management-using-Blockchain.git
   ```
 
   2.Install Dependencies
