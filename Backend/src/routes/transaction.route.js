@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     donateToTemple,
+    createWithdrawal,
     donationHistory,
     getTransactionByTxHash,
     generateTempleReport,
@@ -18,6 +19,7 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 const router = Router();    
 
 router.route("/donate-to-temple").post(verifyJWT, authorizeRoles("user"), donateToTemple);
+router.route("/withdraw").post(verifyJWT, authorizeRoles("templeAdmin"), createWithdrawal);
 router.route("/my-donations").get(verifyJWT, authorizeRoles("user"), donationHistory);
 router.get("/receipt", verifyJWT, getTransactionByTxHash);
 router.route("/generate-temple-report").get(verifyJWT, authorizeRoles("templeAdmin"), generateTempleReport);

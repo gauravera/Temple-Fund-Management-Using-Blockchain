@@ -95,6 +95,69 @@ const donateToTemple = asyncHandler(async (req, res) => {
         );
 });
 
+const createWithdrawal = asyncHandler(async (req, res) => {
+  const {
+    amount,
+    txHash,
+    gasPrice,
+    transactionFee,
+    purpose,
+    status,
+    templeWalletAddress, // wallet address of the withdrawing temple/user
+  } = req.body;
+
+  // Validate required fields
+  if (
+    !amount ||
+    isNaN(amount) ||
+    Number(amount) <= 0 ||
+    !txHash ||
+    !gasPrice ||
+    !transactionFee ||
+    !purpose ||
+    !status
+  ) {
+    throw new ApiError(400, "Missing or invalid required fields");
+  }
+
+  // Validate status
+  const validStatuses = ["pending", "confirmed", "failed"];
+  if (!validStatuses.includes(status)) {
+    throw new ApiError(400, "Invalid status value");
+  }
+
+  // Validate unique transaction hash
+  const existingTx = await Transaction.findOne({ txHash });
+  if (existingTx) {
+    throw new ApiError(400, "Transaction with this hash already exists");
+  }
+
+  // Validate sender from authenticated user
+  const sender = req.user;
+  if (!sender || !sender._id) {
+    throw new ApiError(401, "Unauthorized: Sender not authenticated");
+  }
+
+  // Create the withdrawal transaction record
+  const transaction = await Transaction.create({
+    transactionType: "withdrawal",
+    sender: sender._id,
+    receiver: null, // receiver is null for withdrawal
+    amount,
+    txHash,
+    gasPrice,
+    transactionFee,
+    status,
+    purpose,
+    templeWalletAddress,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, transaction, "Withdrawal transaction recorded successfully")
+    );
+});
 // ✅ Donation History (only for transfers made by user)
 const donationHistory = asyncHandler(async (req, res) => {
   const userId = req.user._id;
