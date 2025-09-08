@@ -487,6 +487,7 @@ const getUserMonthlyDonation = asyncHandler(async (req, res) => {
 
 export {
     donateToTemple,
+    createWithdrawal,
     donationHistory,
     generateTempleReport,
     templeDonations,
