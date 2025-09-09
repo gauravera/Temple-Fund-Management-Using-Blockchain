@@ -22,8 +22,8 @@ import AuthWrapper from "@/app/components/AuthWrapper";
 const socket = io("http://localhost:5050");
 
 export default function ConfirmPage() {
-  const [expandedMetaMaskCard, setExpandedMetaMaskCard] = useState(null);
-  const [expandedNetworkCard, setExpandedNetworkCard] = useState(null);
+  const [expandedMetaMaskCard, setExpandedMetaMaskCard] = useState<string | null>(null);
+  const [expandedNetworkCard, setExpandedNetworkCard] = useState<number | null>(null);
   const { account, provider} = useMetamask();
   const [templeAddressToRegister, setTempleAddressToRegister] =
     useState<string>("");
@@ -294,10 +294,34 @@ export default function ConfirmPage() {
     }
   };
 
-  const handleRemove = (connectionId) => {
+  interface PendingNetworkConnection {
+    id: number;
+    templeName: string;
+    walletId: string;
+    networkType: string;
+    requestDate: string;
+    gasEstimate: string;
+    status: string;
+  }
+
+  interface HandleRemoveFn {
+    (connectionId: number): void;
+  }
+
+  const handleRemove: HandleRemoveFn = (connectionId) => {
     console.log(`Removing network connection with ID: ${connectionId}`);
     alert(`Network connection removed for ID: ${connectionId}`);
   };
+
+  function handleConfirm(id: number): void {
+    // For demo purposes, just show a toast and remove the connection from the list
+    toast.success(`Network connection with ID ${id} confirmed.`);
+    // In a real app, you would call an API to confirm the connection
+    // and then update the UI accordingly.
+    // Here, we just remove it from the pendingNetworkConnections array.
+    // Since pendingNetworkConnections is a constant, you might want to manage it as state.
+    // For now, just show a toast.
+  }
 
   return (
     <AuthWrapper role="superAdmin">

@@ -56,7 +56,7 @@ export default function Navbar() {
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken");
     if (token) {
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<{ email: string }>(token);
       setUserEmail(decoded.email);
     }
   }, []);

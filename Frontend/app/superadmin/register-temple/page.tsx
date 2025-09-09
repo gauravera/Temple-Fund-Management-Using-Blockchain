@@ -27,20 +27,24 @@ const RegisterTemplePage = () => {
     const token = sessionStorage.getItem("accessToken");
 
     try {
-      const res = await apiClient("http://localhost:5050/api/v1/templeAdmin/register-Temple-Admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await apiClient(
+        "http://localhost:5050/api/v1/templeAdmin/register-Temple-Admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: form.authorityName,
+            email: form.email,
+            phone: form.phone,
+            templeName: form.templeName,
+            templeLocation: form.location,
+          }),
         },
-        body: JSON.stringify({
-          name: form.authorityName,
-          email: form.email,
-          phone: form.phone,
-          templeName: form.templeName,
-          templeLocation: form.location,
-        }),
-      });
+        "superAdmin"
+      );
 
       if (!res.ok) throw new Error("Failed to submit form");
 

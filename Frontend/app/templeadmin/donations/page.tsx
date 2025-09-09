@@ -5,8 +5,20 @@ import { useState, useEffect } from "react"
 import { Search, Calendar, Filter, Download, ExternalLink } from "lucide-react"
 import AuthWrapper from "@/app/components/AuthWrapper"
 
+type Donation = {
+  _id: string;
+  sender?: {
+    name?: string;
+  };
+  amount: number;
+  createdAt: string;
+  purpose?: string;
+  txHash: string;
+  status: string;
+};
+
 export default function Donations() {
-  const [donations, setDonations] = useState([]); // ✅ Moved useState here
+  const [donations, setDonations] = useState<Donation[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 

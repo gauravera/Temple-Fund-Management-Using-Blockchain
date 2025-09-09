@@ -13,10 +13,10 @@ import CryptoCarousel from "@/app/components/CryptoCarousel"; // Import the new 
 const UnifiedTempleDonationPage = () => {
   // Donation form state
   const [donationAmount, setDonationAmount] = useState("");
-  const [selectedTemple, setSelectedTemple] = useState(null);
+  const [selectedTemple, setSelectedTemple] = useState<Temple | null>(null);
   const [donationPurpose, setDonationPurpose] = useState("");
   const [selectedCrypto, setSelectedCrypto] = useState("bitcoin"); // Keep this state here
-  const [temples, setTemples] = useState([]);
+  const [temples, setTemples] = useState<Temple[]>([]);
   const router = useRouter();
   const { account, provider, connectWallet } = useMetamask();
   const [ethBalance, setEthBalance] = useState<string | null>(null);
@@ -36,6 +36,19 @@ const UnifiedTempleDonationPage = () => {
     solana: { price: 0, change: 0 },
   });
 
+  interface Temple {
+    templeName: string;
+    walletAddress: string;
+  }
+
+  interface Donation {
+    _id: string;
+    amount: number;
+    receiver: {
+      templeName: string;
+    };
+    createdAt: string;
+  }
   // Fetch active temple admins (for donation)
   const fetchActiveTempleAdmins = async () => {
     try {
@@ -117,7 +130,7 @@ const UnifiedTempleDonationPage = () => {
           amount: Number(donationAmount),
           txHash: tx.hash,
           gasPrice: Number(effectiveGasPrice.toString()),
-          transactionFee: Number(totalCostWei.toString()),
+          transactionFee: Number((totalCostWei ?? BigInt(0)).toString()),
           purpose: donationPurpose,
           status: "confirmed",
           templeWalletAddress: selectedTemple?.walletAddress,
@@ -280,7 +293,10 @@ const UnifiedTempleDonationPage = () => {
       solana: "SOL",
     };
 
-    const selectedCryptoPrice = cryptoPrices[selectedCrypto]?.price || 0;
+    // ...
+
+    const selectedCryptoPrice =
+      cryptoPrices[selectedCrypto as keyof typeof cryptoInfo]?.price || 0;
     const usdValue = (parseFloat(donationAmount) * selectedCryptoPrice).toFixed(
       2
     );
@@ -289,11 +305,15 @@ const UnifiedTempleDonationPage = () => {
       // assuming same contract for both ETH & MATIC (since both EVM chains)
       donateEth(templeAddress);
     } else {
-      toast.error(`${cryptoInfo[selectedCrypto]} donations not supported yet.`);
+      toast.error(
+        `${
+          cryptoInfo[selectedCrypto as keyof typeof cryptoInfo]
+        } donations not supported yet.`
+      );
     }
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number) => {
     if (price >= 1) {
       return price.toLocaleString("en-US", {
         minimumFractionDigits: 2,
@@ -457,26 +477,39 @@ const UnifiedTempleDonationPage = () => {
 
                     {/* Live Price Display */}
                     {selectedCrypto &&
-                      cryptoPrices[selectedCrypto]?.price > 0 && (
+                      cryptoPrices[selectedCrypto as keyof typeof cryptoPrices]
+                        ?.price > 0 && (
                         <div className="mt-2 p-3 bg-gray-50 rounded-lg flex justify-between items-center">
                           <span className="text-sm text-gray-600">
                             Current Price:
                           </span>
                           <div className="text-right">
                             <span className="font-bold text-gray-800">
-                              ${formatPrice(cryptoPrices[selectedCrypto].price)}
+                              $
+                              {formatPrice(
+                                cryptoPrices[
+                                  selectedCrypto as keyof typeof cryptoPrices
+                                ].price
+                              )}
                             </span>
                             <div
                               className={`text-xs ml-2 inline-block ${
-                                cryptoPrices[selectedCrypto].change >= 0
+                                cryptoPrices[
+                                  selectedCrypto as keyof typeof cryptoPrices
+                                ].change >= 0
                                   ? "text-green-500"
                                   : "text-red-500"
                               }`}
                             >
-                              {cryptoPrices[selectedCrypto].change >= 0
+                              {cryptoPrices[
+                                selectedCrypto as keyof typeof cryptoPrices
+                              ].change >= 0
                                 ? "+"
                                 : ""}
-                              {cryptoPrices[selectedCrypto].change?.toFixed(2)}%
+                              {cryptoPrices[
+                                selectedCrypto as keyof typeof cryptoPrices
+                              ].change?.toFixed(2)}
+                              %
                             </div>
                           </div>
                         </div>
@@ -504,12 +537,16 @@ const UnifiedTempleDonationPage = () => {
                         step="0.001"
                       />
                       {donationAmount &&
-                        cryptoPrices[selectedCrypto]?.price && (
+                        cryptoPrices[
+                          selectedCrypto as keyof typeof cryptoPrices
+                        ]?.price && (
                           <div className="absolute right-3 top-3 text-sm text-gray-500">
                             ≈ $
                             {(
                               parseFloat(donationAmount) *
-                              cryptoPrices[selectedCrypto].price
+                              cryptoPrices[
+                                selectedCrypto as keyof typeof cryptoPrices
+                              ].price
                             ).toFixed(2)}{" "}
                             USD
                           </div>
@@ -574,7 +611,7 @@ const UnifiedTempleDonationPage = () => {
                   Recent Donations
                 </h4>
                 <div className="space-y-3">
-                  {recent.map((donation) => (
+                  {recent.map((donation:Donation) => (
                     <div
                       key={donation._id}
                       className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"

@@ -15,9 +15,17 @@ const recentExpenses = [
   { category: "Utilities", amount: "₹15,000", date: "13/5/2023" },
 ]
 
+type Donation = {
+  donor: string;
+  amount: string;
+  date: string;
+  purpose?: string;
+};
+
 export default function Dashboard() {
-  const [recentDonations, setRecentDonations] = useState([]);
-  const [monthlyDonations, setMonthlyDonations] = useState([]);
+  const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
+  type MonthlyDonation = { month: string; amount: number };
+  const [monthlyDonations, setMonthlyDonations] = useState<MonthlyDonation[]>([]);
   const [userCount, setUserCount] = useState(0);
   const [totalDonationStats, setTotalDonationStats] = useState({ totalMATIC: 0 });
   const [maticToInr, setMaticToInr] = useState(0);

@@ -5,7 +5,7 @@ import { useMetamask } from "@/app/hooks/useMetamask";
 import { useRouter } from "next/navigation";
 import LogoutButton from "@/app/components/LogoutButton";
 import AuthWrapper from "@/app/components/AuthWrapper";
-import { toast } from "react-toastify"
+import { toast } from "react-toastify";
 
 import {
   Home,
@@ -34,8 +34,9 @@ import {
   CheckCircle,
   ArrowRight,
   HandHeart,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+  XCircle,
+} from "lucide-react";
 
 const UserDashboard = () => {
   const router = useRouter();
@@ -46,7 +47,16 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [recentDonations, setRecentDonations] = useState([]);
-  const [selectedDonation, setSelectedDonation] = useState(null);
+  const [selectedDonation, setSelectedDonation] = useState<{
+    txHash: string;
+    _id: string;
+    receiver: any;
+    sender?: any;
+    purpose: string;
+    amount: number;
+    status: string;
+    date: string;
+  } | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [verifiedCount, setVerifiedCount] = useState(0);
   const [userTotalDonations, setUserTotalDonations] = useState(0);
@@ -70,11 +80,14 @@ const UserDashboard = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5050/api/v1/transactions/total-donation-done", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          "http://localhost:5050/api/v1/transactions/total-donation-done",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await res.json();
         if (data.success) {
@@ -91,7 +104,9 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchMaticToINR = async () => {
       try {
-        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=inr");
+        const res = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=inr"
+        );
         const data = await res.json();
         setMaticToInr(data["matic-network"]?.inr || 0);
       } catch (error) {
@@ -118,7 +133,9 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchVerifiedCount = async () => {
       try {
-        const response = await fetch("http://localhost:5050/api/v1/superAdminDashboard/count-temple-admins");
+        const response = await fetch(
+          "http://localhost:5050/api/v1/superAdminDashboard/count-temple-admins"
+        );
         const result = await response.json();
         setVerifiedCount(result.data.verifiedCount || 0);
       } catch (error) {
@@ -133,11 +150,14 @@ const UserDashboard = () => {
     const fetchMyDonations = async () => {
       const accessToken = sessionStorage.getItem("accessToken");
       try {
-        const response = await fetch("http://localhost:5050/api/v1/transactions/my-donations", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          "http://localhost:5050/api/v1/transactions/my-donations",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         const result = await response.json();
         if (response.ok) {
@@ -157,11 +177,14 @@ const UserDashboard = () => {
     const fetchMonthlyDonations = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
-        const res = await fetch("http://localhost:5050/api/v1/transactions/temple-donated-amount", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          "http://localhost:5050/api/v1/transactions/temple-donated-amount",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await res.json();
         setMonthlyDonationStats(data.data?.totalMonthlyMATIC || 0);
@@ -172,8 +195,6 @@ const UserDashboard = () => {
 
     fetchMonthlyDonations();
   }, []);
-
-
 
   const fadeIn = {
     initial: { opacity: 0, y: -10 },
@@ -209,20 +230,48 @@ const UserDashboard = () => {
     },
   ];
 
-  const MenuItem = ({ icon: Icon, label, id, active, onClick }) => (
+  type MenuItemProps = {
+    icon: React.ComponentType<{ size: number }>;
+    label: string;
+    id: string;
+    active: boolean;
+    onClick: (id: string) => void;
+  };
+
+  const MenuItem = ({
+    icon: Icon,
+    label,
+    id,
+    active,
+    onClick,
+  }: MenuItemProps) => (
     <button
       onClick={() => onClick(id)}
-      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all cursor-pointer ${active
-        ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-        : "text-gray-600 hover:bg-orange-50 hover:text-orange-600"
-        }`}
+      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all cursor-pointer ${
+        active
+          ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          : "text-gray-600 hover:bg-orange-50 hover:text-orange-600"
+      }`}
     >
       <Icon size={20} />
       <span className="font-medium">{label}</span>
     </button>
   );
 
-  const StatCard = ({ icon: Icon, title, value, change, color = "orange" }) => (
+  type StatCardProps = {
+    icon: React.ComponentType<{ size: number; className?: string }>;
+    title: string;
+    value: string | number;
+    change?: number;
+    color?: string;
+  };
+  const StatCard = ({
+    icon: Icon,
+    title,
+    value,
+    change,
+    color = "orange",
+  }: StatCardProps) => (
     <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
       <div className="flex items-center justify-between mb-4">
         <div
@@ -232,8 +281,9 @@ const UserDashboard = () => {
         </div>
         {change && (
           <span
-            className={`text-sm font-semibold ${change > 0 ? "text-green-600" : "text-red-600"
-              }`}
+            className={`text-sm font-semibold ${
+              change > 0 ? "text-green-600" : "text-red-600"
+            }`}
           >
             {change > 0 ? "+" : ""}
             {change}%
@@ -249,7 +299,9 @@ const UserDashboard = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-orange-500 to-red-500 p-8 rounded-2xl text-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {userData?.name || "Devotee"}! 🙏</h1>
+        <h1 className="text-3xl font-bold mb-2">
+          Welcome back, {userData?.name || "Devotee"}! 🙏
+        </h1>
         <p className="text-orange-100 text-lg">
           Your spiritual journey continues with transparent donations
         </p>
@@ -262,7 +314,9 @@ const UserDashboard = () => {
           title="Total Donated"
           value={
             userTotalDonations !== null && monthlyDonationStats !== undefined
-              ? `${userTotalDonations.toLocaleString()} MATIC (₹${(userTotalDonations * maticToInr).toLocaleString()})`
+              ? `${userTotalDonations.toLocaleString()} MATIC (₹${(
+                  userTotalDonations * maticToInr
+                ).toLocaleString()})`
               : "Loading..."
           }
           change={12}
@@ -279,10 +333,11 @@ const UserDashboard = () => {
           title="This Month"
           value={
             monthlyDonationStats !== null && monthlyDonationStats !== undefined
-              ? `${monthlyDonationStats.toLocaleString()} MATIC (₹${(monthlyDonationStats * maticToInr).toLocaleString()})`
+              ? `${monthlyDonationStats.toLocaleString()} MATIC (₹${(
+                  monthlyDonationStats * maticToInr
+                ).toLocaleString()})`
               : "Loading..."
           }
-
           change={8}
           color="pink"
         />
@@ -299,7 +354,10 @@ const UserDashboard = () => {
       <div className="bg-white p-6 rounded-2xl shadow-lg">
         <h2 className="text-xl font-bold mb-4 text-gray-800">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="flex flex-col items-center cursor-pointer p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-all" onClick={() => router.push('/user/donate')}>
+          <button
+            className="flex flex-col items-center cursor-pointer p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-all"
+            onClick={() => router.push("/user/donate")}
+          >
             <Plus className="text-orange-600 mb-2" size={24} />
             <span className="text-sm font-medium text-gray-700">
               New Donation
@@ -330,56 +388,72 @@ const UserDashboard = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Donations */}
         <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Recent Donations</h2>
-
+          <h2 className="text-xl font-bold mb-4 text-gray-800">
+            Recent Donations
+          </h2>
           {recentDonations && recentDonations.length > 0 ? (
             <>
               <div className="space-y-4">
-                {recentDonations.slice(0, 4).map((donation, index) => (
-                  <div
-                    key={donation.txHash || donation._id || index}
-                    className="p-4 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-center">
-                      {/* Left side */}
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                          <Home className="text-white" size={16} />
+                {recentDonations.slice(0, 4).map(
+                  (
+                    donation: {
+                      txHash: string;
+                      _id: string;
+                      receiver: any;
+                      purpose: string;
+                      amount: number;
+                      status: string;
+                    },
+                    index
+                  ) => (
+                    <div
+                      key={donation.txHash || donation._id || index}
+                      className="p-4 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex justify-between items-center">
+                        {/* Left side */}
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                            <Home className="text-white" size={16} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800 text-sm">
+                              {donation.receiver?.templeName || "Temple N/A"}
+                            </p>
+                            <p className="text-gray-600 text-xs">
+                              {donation.purpose}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-800 text-sm">
-                            {donation.receiver?.templeName || "Temple N/A"}
-                          </p>
-                          <p className="text-gray-600 text-xs">{donation.purpose}</p>
-                        </div>
-                      </div>
 
-                      {/* Right side */}
-                      <div className="text-right">
-                        <p className="font-bold text-gray-800 text-sm">
-                          {donation.amount} MATIC
-                        </p>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${donation.status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : donation.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                        {/* Right side */}
+                        <div className="text-right">
+                          <p className="font-bold text-gray-800 text-sm">
+                            {donation.amount} MATIC
+                          </p>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                              donation.status === "confirmed"
+                                ? "bg-green-100 text-green-800"
+                                : donation.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
                             }`}
-                        >
-                          {donation.status === "confirmed" ? (
-                            <CheckCircle size={12} className="mr-1" />
-                          ) : donation.status === "pending" ? (
-                            <Clock size={12} className="mr-1" />
-                          ) : (
-                            <XCircle size={12} className="mr-1" />
-                          )}
-                          {donation.status}
-                        </span>
+                          >
+                            {donation.status === "confirmed" ? (
+                              <CheckCircle size={12} className="mr-1" />
+                            ) : donation.status === "pending" ? (
+                              <Clock size={12} className="mr-1" />
+                            ) : (
+                              <XCircle size={12} className="mr-1" />
+                            )}
+                            {donation.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
               {/* View More */}
@@ -415,10 +489,11 @@ const UserDashboard = () => {
                   <p className="text-sm text-gray-600">{report.temple}</p>
                 </div>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${report.status === "completed"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-blue-100 text-blue-800"
-                    }`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    report.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
                 >
                   {report.status}
                 </span>
@@ -476,89 +551,110 @@ const UserDashboard = () => {
 
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Donation History</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Donation History
+          </h2>
         </div>
 
         {recentDonations && recentDonations.length > 0 ? (
           <div className="divide-y divide-gray-200">
-            {recentDonations.map((donation, index) => (
-              <div
-                key={donation.txHash || donation._id || index}
-                className="p-6 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                      <Home className="text-white" size={20} />
+            {recentDonations.slice(0, 4).map(
+              (
+                donation: {
+                  txHash: string;
+                  _id: string;
+                  receiver: any;
+                  purpose: string;
+                  amount: number;
+                  status: string;
+                  date: string;
+                },
+                index
+              ) => (
+                <div
+                  key={donation.txHash || donation._id || index}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                        <Home className="text-white" size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-800">
+                          {donation.receiver?.templeName || "Temple N/A"}
+                        </h3>
+                        <p className="text-sm text-gray-600 flex items-center mt-1">
+                          <MapPin size={14} className="mr-1" />
+                          {donation.receiver?.templeLocation || "Location N/A"}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Purpose: {donation.purpose}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800">
-                        {donation.receiver?.templeName || "Temple N/A"}
-                      </h3>
-                      <p className="text-sm text-gray-600 flex items-center mt-1">
-                        <MapPin size={14} className="mr-1" />
-                        {donation.receiver?.templeLocation || "Location N/A"}
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-gray-800">
+                        {donation.amount} MATIC
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Purpose: {donation.purpose}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-gray-800">
-                      {donation.amount} MATIC
-                    </p>
-                    <p className="text-sm text-gray-600">{donation.date}</p>
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 ${donation.status === "confirmed"
-                        ? "bg-green-100 text-green-800"
-                        : donation.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
+                      <p className="text-sm text-gray-600">{donation.date}</p>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 ${
+                          donation.status === "confirmed"
+                            ? "bg-green-100 text-green-800"
+                            : donation.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
                         }`}
-                    >
-                      {donation.status === "confirmed" ? (
-                        <CheckCircle size={12} className="mr-1" />
-                      ) : donation.status === "pending" ? (
-                        <Clock size={12} className="mr-1" />
-                      ) : (
-                        <XCircle size={12} className="mr-1" />
-                      )}
-                      {donation.status}
-                    </span>
+                      >
+                        {donation.status === "confirmed" ? (
+                          <CheckCircle size={12} className="mr-1" />
+                        ) : donation.status === "pending" ? (
+                          <Clock size={12} className="mr-1" />
+                        ) : (
+                          <XCircle size={12} className="mr-1" />
+                        )}
+                        {donation.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-between items-center">
+                    <p className="text-xs text-gray-500">
+                      Tx Hash: {donation.txHash.slice(0, 6)}...
+                      {donation.txHash.slice(-4)}
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `https://www.oklink.com/amoy/tx/${donation.txHash}`,
+                            "_blank"
+                          )
+                        }
+                        className="text-orange-500 hover:text-orange-600 transition"
+                        title="View on Amoy Explorer"
+                      >
+                        <ExternalLink size={14} />
+                      </button>
+                    </p>
+
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedDonation(donation);
+                          setShowDetailsModal(true);
+                        }}
+                        className="flex items-center text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded text-sm font-medium transition"
+                      >
+                        <Eye size={14} className="mr-1" /> View Details
+                      </button>
+
+                      <button className="text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm font-medium transition">
+                        Download Receipt
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 flex justify-between items-center">
-                  <p className="text-xs text-gray-500">
-                    Tx Hash: {donation.txHash.slice(0, 6)}...{donation.txHash.slice(-4)}
-                    <button
-                      onClick={() =>
-                        window.open(`https://www.oklink.com/amoy/tx/${donation.txHash}`, "_blank")
-                      }
-                      className="text-orange-500 hover:text-orange-600 transition"
-                      title="View on Amoy Explorer"
-                    >
-                      <ExternalLink size={14} />
-                    </button>
-                  </p>
-
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedDonation(donation);
-                        setShowDetailsModal(true);
-                      }}
-                      className="flex items-center text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded text-sm font-medium transition">
-                      <Eye size={14} className="mr-1" /> View Details
-                    </button>
-
-                    <button className="text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm font-medium transition">
-                      Download Receipt
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              )
+            )}
 
             {showDetailsModal && selectedDonation && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -569,34 +665,58 @@ const UserDashboard = () => {
                   >
                     ✕
                   </button>
-                  <h2 className="text-xl font-bold mb-4 text-gray-800">Donation Details</h2>
+                  <h2 className="text-xl font-bold mb-4 text-gray-800">
+                    Donation Details
+                  </h2>
                   <div className="space-y-3 text-sm text-gray-700">
-                    <p><strong>Temple Name:</strong> {selectedDonation.receiver?.templeName || "N/A"}</p>
-                    <p><strong>Location:</strong> {selectedDonation.receiver?.templeLocation || "N/A"}</p>
-                    <p><strong>Purpose:</strong> {selectedDonation.purpose}</p>
-                    <p><strong>Amount:</strong> {selectedDonation.amount} MATIC</p>
-                    <p><strong>Date:</strong> {new Date(selectedDonation.createdAt).toLocaleString() || "N/A"}</p>
-                    <p><strong>Status:</strong> {selectedDonation.status}</p>
-                    <p><strong>Transaction Hash:</strong> {selectedDonation.txHash}</p>
-                    <p><strong>Sender Wallet: </strong>{selectedDonation.sender?.walletAddress || "N/A"}</p>
+                    <p>
+                      <strong>Temple Name:</strong>{" "}
+                      {selectedDonation.receiver?.templeName || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Location:</strong>{" "}
+                      {selectedDonation.receiver?.templeLocation || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Purpose:</strong> {selectedDonation.purpose}
+                    </p>
+                    <p>
+                      <strong>Amount:</strong> {selectedDonation.amount} MATIC
+                    </p>
+                    <p>
+                      <strong>Date:</strong>{" "}
+                      {new Date(selectedDonation.date).toLocaleString() ||
+                        "N/A"}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {selectedDonation.status}
+                    </p>
+                    <p>
+                      <strong>Transaction Hash:</strong>{" "}
+                      {selectedDonation.txHash}
+                    </p>
+                    <p>
+                      <strong>Sender Wallet: </strong>
+                      {selectedDonation.sender?.walletAddress || "N/A"}
+                    </p>
                     {/* Add more fields if needed */}
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         ) : (
           <div className="p-10 text-center text-gray-500">
             <HandHeart className="mx-auto text-orange-500 mb-4" size={40} />
             <p className="text-lg font-medium">No donations found.</p>
-            <p className="text-sm text-gray-400">You haven’t made any donations yet.</p>
+            <p className="text-sm text-gray-400">
+              You haven’t made any donations yet.
+            </p>
           </div>
         )}
       </div>
     </div>
   );
-
 
   const renderAnalytics = () => (
     <div className="space-y-6">
@@ -651,7 +771,10 @@ const UserDashboard = () => {
           {/* Sidebar */}
           <div className="w-64 bg-white shadow-lg min-h-screen">
             <div className="p-6 pt-2">
-              <div className="flex items-center space-x-2 mb-8 cursor-pointer" onClick={() => router.push("/")}>
+              <div
+                className="flex items-center space-x-2 mb-8 cursor-pointer"
+                onClick={() => router.push("/")}
+              >
                 {/*Logo*/}
 
                 <div className="relative w-12 h-12">
@@ -696,7 +819,7 @@ const UserDashboard = () => {
                   icon={Home}
                   label="Dashboard"
                   id="dashboard"
-                  active={activeTab === 'dashboard'}
+                  active={activeTab === "dashboard"}
                   onClick={setActiveTab}
                 />
                 <MenuItem
@@ -717,7 +840,6 @@ const UserDashboard = () => {
                   icon={History}
                   label="History"
                   id="history"
-
                   active={activeTab === "history"}
                   onClick={setActiveTab}
                 />
@@ -725,7 +847,6 @@ const UserDashboard = () => {
                   icon={Settings}
                   label="Settings"
                   id="settings"
-
                   active={activeTab === "settings"}
                   onClick={setActiveTab}
                 />
@@ -862,7 +983,6 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
-
     </AuthWrapper>
   );
 };

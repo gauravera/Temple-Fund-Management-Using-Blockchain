@@ -11,7 +11,36 @@ export default function TempleInfo() {
   const [activeTab, setActiveTab] = useState("general")
   const [isLoading, setIsLoading] = useState(false)
   const [isUpdatingCoverImage, setIsUpdatingCoverIMage] = useState(false);
-  const [templeData, setTempleData] = useState({
+  const [templeData, setTempleData] = useState<{
+    templeName: string;
+    location: {
+      address: string;
+      city: string;
+      state: string;
+      country: string;
+    };
+    email: string;
+    phone: string;
+    description: string;
+    history: string;
+    coverImage: File | string | null;
+    darshanTimings: {
+      morning: string;
+      evening: string;
+    };
+    contactDetails: {
+      phone: string;
+      email: string;
+      facebook: string;
+      instagram: string;
+      website: string;
+    };
+    activitiesAndServices: string[];
+    specialCeremonies: any[];
+    upcomingEvents: any[];
+    photoGallery: (File | string)[];
+    _id?: string;
+  }>({
     templeName: "", // Pre-filled from User model
     location: {
       address: "",
@@ -199,8 +228,14 @@ export default function TempleInfo() {
     }
   };
 
-  const handleFileUpload = (event, type) => {
-    const file = event.target.files[0];
+  interface FileUploadEvent extends React.ChangeEvent<HTMLInputElement> {
+    target: HTMLInputElement & EventTarget;
+  }
+
+  type FileUploadType = "coverImage" | "gallery";
+
+  const handleFileUpload = (event: FileUploadEvent, type: FileUploadType) => {
+    const file = event.target.files && event.target.files[0];
     if (file) {
       if (type === "coverImage") {
         setTempleData({ ...templeData, coverImage: file });
@@ -320,7 +355,14 @@ export default function TempleInfo() {
     }
   };
 
-  const deleteGalleryImage = async (imageUrl) => {
+  interface DeleteGalleryImageResponse {
+    data?: {
+      deletedImageUrl: string;
+    };
+    message?: string;
+  }
+
+  const deleteGalleryImage = async (imageUrl: string) => {
     if (!templeData._id) {
       toast.error("Temple ID is not available.");
       return;
@@ -340,7 +382,7 @@ export default function TempleInfo() {
         }
       );
 
-      const result = await response.json();
+      const result: DeleteGalleryImageResponse = await response.json();
 
       if (response.ok) {
         toast.success("Image deleted successfully!");
@@ -812,7 +854,10 @@ export default function TempleInfo() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => document.getElementById("coverImageInput").click()}
+            onClick={() => {
+              const input = document.getElementById("coverImageInput");
+              if (input) input.click();
+            }}
             className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-medium shadow-lg flex items-center space-x-2"
           >
             <Upload className="w-5 h-5" />
@@ -894,7 +939,13 @@ export default function TempleInfo() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => deleteGalleryImage(image)}
+                  onClick={() => {
+                    if (typeof image === "string") {
+                      deleteGalleryImage(image);
+                    } else {
+                      toast.error("Cannot delete unsaved image. Please upload first.");
+                    }
+                  }}
                   className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
                 >
                   Delete
@@ -908,7 +959,10 @@ export default function TempleInfo() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => document.getElementById("galleryImageInput").click()}
+            onClick={() => {
+              const input = document.getElementById("galleryImageInput");
+              if (input) input.click();
+            }}
             className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-medium shadow-lg flex items-center space-x-2"
           >
             <Upload className="w-5 h-5" />

@@ -27,22 +27,34 @@ export default function SuperAdminLogin() {
     }
   }, [router]);
 
-  const handleInputChange = (e) => {
+  interface FormData {
+    email: string;
+    password: string;
+  }
+
+  interface FieldValidation {
+    email: boolean;
+    password: boolean;
+  }
+
+  interface InputChangeEvent extends React.ChangeEvent<HTMLInputElement> {}
+
+  const handleInputChange = (e: InputChangeEvent): void => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev: FormData) => ({
       ...prev,
       [name]: value
     }));
     
     // Real-time validation
     if (name === 'email') {
-      setFieldValidation(prev => ({
+      setFieldValidation((prev: FieldValidation) => ({
         ...prev,
         email: value.includes('@') && value.includes('.')
       }));
     }
     if (name === 'password') {
-      setFieldValidation(prev => ({
+      setFieldValidation((prev: FieldValidation) => ({
         ...prev,
         password: value.length >= 6
       }));

@@ -3,8 +3,17 @@
 import React, { useState, useEffect } from "react";
 import AuthWrapper from "@/app/components/AuthWrapper";
 
+type Temple = {
+  name: string;
+  email: string;
+  phone: string;
+  templeName: string;
+  templeLocation: string;
+  status: string;
+};
+
 export default function TempleList() {
-  const [temples, setTemples] = useState([]);
+  const [temples, setTemples] = useState<Temple[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10); // Number of temples per page
   const [total, setTotal] = useState(0); // Total number of temples
@@ -84,7 +93,7 @@ export default function TempleList() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-600">
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-600">
                       No active temples found.
                     </td>
                   </tr>

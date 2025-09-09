@@ -36,7 +36,7 @@ export default function TempleFundSignup() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -61,7 +61,7 @@ useEffect(() => {
 
   // Step 1: User Details Validation
   const validateStep1 = () => {
-    const newErrors = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!validateName(name)) {
       newErrors.name =
@@ -92,15 +92,17 @@ useEffect(() => {
   };
 
   // Handle OTP input
-  const handleOtpChange = (index: number, value) => {
+  interface OtpChangeEvent extends React.ChangeEvent<HTMLInputElement> {}
+
+  const handleOtpChange = (index: number, value: string) => {
     if (value.length <= 1) {
-      const newOtp = [...otp];
+      const newOtp: string[] = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
 
       // Auto-focus next input
       if (value && index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
+        const nextInput: HTMLElement | null = document.getElementById(`otp-${index + 1}`);
         if (nextInput) nextInput.focus();
       }
     }
@@ -123,7 +125,7 @@ useEffect(() => {
   };
 
   // Handle OTP backspace
-  const handleOtpKeyDown = (index: number, e: KeyboardEvent) => {
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) prevInput.focus();
@@ -460,7 +462,7 @@ useEffect(() => {
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.phone ? "border-red-500" : "border-gray-300"
                       }`}
                     placeholder="Enter 10-digit mobile number"
-                    maxLength="10"
+                    maxLength={10}
                   />
                 </div>
                 {errors.phone && (
@@ -521,7 +523,7 @@ useEffect(() => {
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onPaste={handleOtpPaste}
                     className="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    maxLength="1"
+                    maxLength={1}
                   />
                 ))}
               </div>

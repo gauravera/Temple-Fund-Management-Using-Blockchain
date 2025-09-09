@@ -45,7 +45,7 @@ export default function WithdrawPage() {
           setLastTransactionCost(ethers.formatEther(totalCostWei));
         }
 
-        toast.success(successMessage + ` Transaction hash: ${receipt.transactionHash}`);
+        toast.success(successMessage + ` Transaction hash: ${receipt.hash}`);
       } else {
         toast.success(successMessage + ` (Receipt not available immediately)`);
       }

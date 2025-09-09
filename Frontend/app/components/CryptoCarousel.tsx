@@ -8,9 +8,19 @@ interface CryptoCarouselProps {
 }
 
 const CryptoCarousel: React.FC<CryptoCarouselProps> = ({ onSelectCrypto }) => {
-  const [allCryptoPrices, setAllCryptoPrices] = useState([]);
+  interface CarouselCurrency {
+    id: string;
+    name: string;
+    symbol: string;
+    price: number;
+    image: string;
+    price_change_percentage_24h: number;
+    market_cap: number;
+  }
+  
+  const [allCryptoPrices, setAllCryptoPrices] = useState<CarouselCurrency[]>([]);
   const [loadingPrices, setLoadingPrices] = useState(true);
-  const [priceError, setPriceError] = useState(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
   const [marketStats, setMarketStats] = useState({
     totalMarketCap: 0,
     totalVolume: 0,
@@ -46,7 +56,27 @@ const CryptoCarousel: React.FC<CryptoCarouselProps> = ({ onSelectCrypto }) => {
 
         const specificData = await specificResponse.json();
 
-        let carouselCurrencies = marketData.map((coin) => ({
+        interface CarouselCurrency {
+          id: string;
+          name: string;
+          symbol: string;
+          price: number;
+          image: string;
+          price_change_percentage_24h: number;
+          market_cap: number;
+        }
+
+        interface MarketData {
+          id: string;
+          name: string;
+          symbol: string;
+          current_price: number;
+          image: string;
+          price_change_percentage_24h: number;
+          market_cap: number;
+        }
+
+        let carouselCurrencies: CarouselCurrency[] = (marketData as MarketData[]).map((coin: MarketData): CarouselCurrency => ({
           id: coin.id,
           name: coin.name,
           symbol: coin.symbol.toUpperCase(),
@@ -114,7 +144,11 @@ const CryptoCarousel: React.FC<CryptoCarouselProps> = ({ onSelectCrypto }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const formatPrice = (price) => {
+  interface FormatPrice {
+    (price: number): string;
+  }
+
+  const formatPrice: FormatPrice = (price) => {
     if (price >= 1) {
       return price.toLocaleString("en-US", {
         minimumFractionDigits: 2,
@@ -124,7 +158,11 @@ const CryptoCarousel: React.FC<CryptoCarouselProps> = ({ onSelectCrypto }) => {
     return price.toFixed(6);
   };
 
-  const formatMarketCap = (marketCap) => {
+  interface FormatMarketCap {
+    (marketCap: number): string;
+  }
+
+  const formatMarketCap: FormatMarketCap = (marketCap) => {
     if (marketCap >= 1e12) {
       return (marketCap / 1e12).toFixed(1) + "T";
     } else if (marketCap >= 1e9) {
@@ -195,7 +233,7 @@ const CryptoCarousel: React.FC<CryptoCarouselProps> = ({ onSelectCrypto }) => {
                       cardano: "cardano",
                       solana: "solana",
                     };
-                    const mappedCrypto = cryptoMapping[crypto.id];
+                    const mappedCrypto = cryptoMapping[crypto.id as keyof typeof cryptoMapping];
                     if (mappedCrypto) {
                       onSelectCrypto(mappedCrypto); // Call the prop function
                       document
